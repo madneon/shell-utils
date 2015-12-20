@@ -18,7 +18,7 @@
 # Generated passowrd is hard to guess by brute-force, note that for 16-char long
 # password there is: 1,877,213,388,752,445,800,995,314,794,496 combinations :)
 #
-# If you want shorter password type new integer length as second parameter.
+# If you want shorter password type new integer length as parameter.
 #
 # -------------------------------------------------------------------------------
 
