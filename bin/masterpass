@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# This code is Copyright 2013-2014 (c) madneon
+# For contact info see http://madneon.com
+#
+# This script generates a password for your different sites/programs with your
+# master password as an "unlock". The usage is as follows:
+# Choose (and remember well!) a "master password". Enter it every time this
+# script asks. Then enter your "reason password".
+#
+# Example:
+# Let's assume your master password is: "g00nie!2", and you want a password for
+# registering new account at a site "github.com".
+# Enter a "g00nie!2" as "master" and "github" as "reason".
+# Copy and paste generated password.
+# Your passwords are safe as long as nobody finds out your "master" password.
+#
+# Generated passowrd is hard to guess by brute-force, note that for 16-char long
+# password there is: 1,877,213,388,752,445,800,995,314,794,496 combinations :)
+#
+# If you want shorter password type new integer length as second parameter.
+#
+# -------------------------------------------------------------------------------
+
+# Allowed chars in password, it must be 79B long (offset 0-78)
+chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-[],.~!@#%^&_+|{}"
+
+# Command line argument - desired password length
+if [ -n "$1" ]; then
+	l=$1
+	if [ "$l" -gt "16" -o "$l" -lt "5" ]; then
+		echo "Length must be between 5 and 16"
+		exit 1
+	fi
+else
+	l=16
+fi
+
+# Read "master" pass
+echo -n "Enter master password: "
+read -s m
+echo
+
+# Read "reason"
+echo -n "Enter reason: "
+read -s r
+echo
+
+# Get 512bit SHA string
+s=`echo $m $r|sha512sum|cut -f1 -d" "`
+
+# Basic check if SHA string length is correct
+a1=`echo $s|cut -b128`
+a2=`echo $s|cut -b129`
+if [ "$a1" == "" -o "$a2" != "" ]; then
+	echo "Error in encrypted SHA string length"
+	exit 1
+fi
+
+# Generate password
+p=""
+for (( i=0; "$i" != "$l" ; i=$((i+1)) )); do
+	# SHA string offset
+	j=$((128 - 3 - i * 4))
+	k=$((j+1))
+
+	# Get two hex bytes
+	b1="0x"`echo $s|cut -b$j-$k`
+
+	j=$((j+2))
+	k=$((k+2))
+	b2=0x`echo $s|cut -b$j-$k`
+
+	# $chars string offset
+	b1=$((b1/4))
+	b2=$((b2/16))
+
+	d=$((b1+b2))
+
+	# Get the char
+	c=`echo $chars|cut -b$d`
+	p="$p$c"
+done
+
+echo "$p"
