@@ -37,13 +37,11 @@ else
 fi
 
 # Read "master" pass
-echo -n "Enter master password: "
-read -s m
+read -p "Enter master password: " -s m
 echo
 
 # Read "reason"
-echo -n "Enter reason: "
-read -s r
+read -p "Enter reason: " -s r
 echo
 
 # Get 512bit SHA string
