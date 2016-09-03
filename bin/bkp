@@ -25,6 +25,7 @@ d_out="$d_root/var/bkp"			# output directory
 age_max=17						# max file age, in days
 method="tar.gz"					# compress method
 
+# Load config
 if [ "$1"X != X ]; then
 	f_in=$1
 fi
