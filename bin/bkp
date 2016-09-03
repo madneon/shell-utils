@@ -1,0 +1,145 @@
+#!/bin/bash
+
+#
+# Copyright © 2010-2016 by madneon
+# http://madneon.com
+#
+
+f_run="/var/run/mdn-bkp.pid"	# lock file
+
+# Check if locked
+if [ -e $f_run ]; then
+	echo -n "Alredy running, pid "
+	cat $f_run
+	exit 1
+fi
+
+# Lock
+echo $$ > $f_run
+
+# Parameters
+d_root="/opt"					# root directory
+f_log="$d_root/var/log/bkp.log"	# log file
+f_in="$d_root/etc/bkp"			# input file
+d_out="$d_root/var/bkp"			# output directory
+age_max=17						# max file age, in days
+method="tar.gz"
+
+if [ "$1"X != X ]; then
+	f_in=$1
+fi
+
+# Programm
+
+# Log start time
+echo -en "\nStart ($$): " >> $f_log
+date +"%F %T" >> $f_log
+
+function f() {
+	while read u; do
+		# skip empty lines
+		if [ "$u" == "" ]; then
+			continue
+		fi
+
+		# skip comments
+		if [ `echo $u|cut -b1`X == "#X" ]; then
+			continue
+		fi
+
+		# command "stop"
+		a=`echo $u|cut -f1 -d":"`
+		s=`echo $u|cut -f2 -d":"`
+		if [ "$a"X == "stop"X ]; then
+			echo "Service stop: $s" >> $f_log
+			/etc/init.d/"$s" stop
+			continue
+		fi
+
+		# command "start"
+		if [ "$a"X == "start"X ]; then
+			echo "Service start: $s" >> $f_log
+			/etc/init.d/"$s" start
+			continue
+		fi
+
+		# command "method"
+		if [ "$a"X == "method"X ]; then
+			method="$s"
+			continue
+		fi
+
+		# command "dir"
+		if [ "$a"X == "dir"X ]; then
+			d_out="$s"
+			continue
+		fi
+
+		# create output directory
+		mkdir -p $d_out
+		chmod 700 $d_out
+		cd $d_out
+
+		if [ `pwd`X != "$d_out"X ]; then
+			echo "Error: cannot access output directory" >> $f_log
+			exit 1
+		fi
+
+		# delete old archives
+		dt=`date +%s`
+		for f in `ls -1`; do
+			if [ ! -f $f ];then
+				continue
+			fi
+			fd=`echo $f|cut -f2 -d"_"`
+			ft=`echo $f|cut -f3 -d"_"|cut -b-8`
+			fdt=`date +%s --date "$fd $ft"`
+			a=$((dt-fdt))
+			a=$((a/86400))
+			if [ $a -gt $age_max ]; then
+				rm -v $f &>> $f_log
+			fi
+		done
+
+		# archive name
+		n=`echo $u|cut -f1 -d" "`
+		# directory to archive
+		p=`echo $u|cut -f2 -d" "`
+
+		# get datetime
+		dt=`date +"%F_%T"`
+		# archive file name
+		fn="$n"_"$dt"."$method"
+
+		# compress
+		case "$method" in
+			"zip")
+				zip -qr9 .$fn.bkpnew $p/* &>> $f_log
+				;;
+			"tar.bz2")
+				tar -Pcjf "./.$fn.bkpnew" "$p/" &>> $f_log
+				;;
+			*)
+				tar -Pczf "./.$fn.bkpnew" "$p/" &>> $f_log
+				;;
+		esac
+		mv "./.$fn.bkpnew" "./$fn"
+
+		# log archive size and name
+		if [ $? == 0 ]; then
+			s=`stat -c %s $fn`
+			echo -e "$s\t$fn" >> $f_log
+		fi
+	done
+}
+
+cat $f_in|f
+
+# Log finish time
+echo -en "Finish ($$): " >> $f_log
+date +"%F %T" >> $f_log
+
+# Unlock
+rm $f_run
+
+# bb 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03
