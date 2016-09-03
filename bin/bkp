@@ -23,7 +23,7 @@ f_log="$d_root/var/log/bkp.log"	# log file
 f_in="$d_root/etc/bkp"			# input file
 d_out="$d_root/var/bkp"			# output directory
 age_max=17						# max file age, in days
-method="tar.gz"
+method="tar.gz"					# compress method
 
 if [ "$1"X != X ]; then
 	f_in=$1
