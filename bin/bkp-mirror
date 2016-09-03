@@ -1,0 +1,116 @@
+#!/bin/bash
+
+#
+# Copyright © 2010-2016 by madneon
+# http://madneon.com
+#
+
+f_run="/var/run/bkp-mirror.pid"		# lock file
+
+# Check if locked
+if [ -e $f_run ]; then
+	echo -n "Alredy running, pid "
+	cat $f_run
+	exit 1
+fi
+
+# Lock
+pid=$$
+echo $pid > $f_run
+
+# Parameters
+d_root="/opt"							# root directory
+d_in="$d_root/var/bkp"					# input directory
+d_out="$d_root/var/bkp-mirror"			# output directories (d_out*)
+f_in="$d_root/etc/bkp-mirrot"			# config file
+f_log="$d_root/var/log/bkp-mirror.log"	# log file
+f_run_hold="/var/run/bkp.pid"			# hold file (bkp)
+space_min=200							# minimum free space (MiB, must be greater than max transfer/sec)
+
+# Specified config
+if [ "$1"X != X ]; then
+	f_in=$1
+fi
+
+# Load config
+if [ -f $f_in ]; then
+	. $f_in
+fi
+
+# Log start time
+echo -en "\nStart ($pid): " >> $f_log
+date +"%F %T" >> $f_log
+
+# Check input dir
+if [ ! -d $d_in  ]; then
+	echo "Error: cannot access input directory, terminating" >> $f_log
+	# Unlock
+	rm $f_run
+	exit 1
+fi
+
+# Check for bkp still running
+if [ -f $f_run_hold ]; then
+	echo -n "Waiting for bkp to finish, pid " >> $f_log
+	cat $f_run_hold >> $f_log
+	echo "..." >> $f_log
+fi
+
+while [ -f $f_run_hold ]; do
+	sleep 1
+done
+
+# Background job - check free space, delete oldest archives if needed
+space_min=$((space_min*1024))
+
+function df_check() {
+	while [ -f $f_run ]; do
+		for d in $d_out*; do
+			if [ -d "$d" ]; then
+				r=1
+				while [ $r == 1 ]; do
+					df=`echo \`df $d\`|cut -f11 -d" "`
+					if [ $df -lt $space_min ]; then
+						r=1
+					else
+						r=0
+					fi
+
+					if [ $r == 1 ]; then
+						cd $d
+						#todo: implement other "bkp" "methods"
+						oldest=`find *|grep -v casual|grep "_....-..-.._..:..:..\.tar\.gz$"|rev|cut -b-26|rev|sort|head -1`
+						fs=`find *|grep "$oldest$"`
+						for f in $fs; do
+							echo -n "($d_out) " >> $f_log
+							rm -v $f >> $f_log
+						done
+					fi
+				done
+			fi
+		done
+		sleep 1
+	done
+}
+
+# Start background job
+df_check &
+
+# Sync mounted dirs
+for d in $d_out*; do
+	if [ -d "$d" ]; then
+		echo "$d_in -> $d" >> $f_log
+		rsync --exclude=".*.bkpnew" -av "$d_in/" "$d/" &>> $f_log
+	fi
+done
+
+# Log finish time
+echo -en "\nFinish ($pid): " >> $f_log
+date +"%F %T" >> $f_log
+
+sleep 2 # Last df_check
+
+# Unlock
+rm $f_run
+
+# madneon 2010-06-07, 2011-05-14, 2012-08-18, 2014-12-14, 2016-09-03
