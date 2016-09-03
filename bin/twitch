@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Copyright 2015 (c) madneon
+# http://madneon.com
+
+if [ -n "$2" ]; then
+	QUALITY=$2
+else
+	QUALITY=source
+fi
+
+livestreamer --hls-segment-threads 3 --player "vlc --network-caching 10000" http://www.twitch.tv/$1 $QUALITY
