@@ -29,7 +29,7 @@ if [ "$1"X != X ]; then
 	f_in=$1
 fi
 
-# Programm
+# Program
 
 # Log start time
 echo -en "\nStart ($$): " >> $f_log
