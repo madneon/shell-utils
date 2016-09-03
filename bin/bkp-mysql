@@ -1,0 +1,90 @@
+#!/bin/bash
+
+#
+# Copyright © 2011-2016 by madneon
+# http://madneon.com
+#
+
+f_run="/var/run/bkp-mysql.pid"
+
+# Check if locked
+if [ -e $f_run ]; then
+	echo -n "Alredy running, pid "
+	cat $f_run
+	exit 1
+fi
+
+# Lock
+echo $$ > $f_run
+
+# Paramaters
+d_root="/opt"							# root directory
+f_log="$d_root/var/log/bkp-mysql.log"	# log file
+f_in="$d_root/etc/bkp-mysql"			# input file
+d_out="$d_root/bkp/mysql"				# output directory
+login="root"							# database login
+password="?"							# database password
+
+# Load config
+if [ -f $f_in ]; then
+	. $f_in
+fi
+
+# Program
+
+# Log start time
+echo -en "\nStart: " >> $f_log
+date +"%F %T" >> $f_log
+
+# Create output directory
+mkdir -p $d_out
+cd $d_out
+rm *.sql
+
+# Load list of databases
+dbs=`echo "SHOW DATABASES;"|mysql -u $login -p$password $db`
+
+for db in $dbs; do
+	# skip header and system database
+	if [ "$db" == "Database" -o "$db" == "information_schema" ]; then
+		continue;
+	fi
+
+	# dump
+	mysqldump -u $login -p$password --databases $db --add-drop-table --skip-comments --add-drop-database --no-data -R -r $db.sql &>> $f_log
+	r=$?
+
+	# log result
+	if [ $r == 0 ]; then
+		s=`stat -c %s $db.sql`
+		echo -e "$s\t$db.sql" >> $f_log
+	fi
+
+	# load list of tables
+	tbs=`echo "SHOW TABLES;"|mysql -u $login -p$password $db`
+	for tb in $tbs; do
+		# skip header
+		if [ "$tb" == "Tables_in_$db" ]; then
+			continue;
+		fi
+
+		# dump
+		mysqldump -u $login -p$password --add-drop-table --skip-comments --replace -e "$db" "$tb" -r $db.$tb.sql &>> $f_log
+		r=$?
+
+		# log result
+		if [ $r == 0 ]; then
+			s=`stat -c %s $db.$tb.sql`
+			echo -e "$s\t$db.$tb.sql" >> $f_log
+		fi
+    done
+done
+
+# Log finish time
+echo -en "Finish: " >> $f_log
+date +"%F %T" >> $f_log
+
+# Unlock
+rm $f_run
+
+# madneon 2011-05-14, 2015-01-02, 2016-09-03
