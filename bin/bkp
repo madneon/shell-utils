@@ -20,7 +20,7 @@ echo $$ > $f_run
 # Parameters
 d_root="/opt"					# root directory
 f_log="$d_root/var/log/bkp.log"	# log file
-f_in="$d_root/etc/bkp"			# input file
+f_in="$d_root/etc/bkp"			# config file
 d_out="$d_root/var/bkp"			# output directory
 age_max=17						# max file age, in days
 method="tar.gz"					# compress method

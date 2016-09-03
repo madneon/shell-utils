@@ -20,7 +20,7 @@ echo $$ > $f_run
 # Paramaters
 d_root="/opt"							# root directory
 f_log="$d_root/var/log/bkp-mysql.log"	# log file
-f_in="$d_root/etc/bkp-mysql"			# input file
+f_in="$d_root/etc/bkp-mysql"			# config file
 d_out="$d_root/bkp/mysql"				# output directory
 login="root"							# database login
 password="?"							# database password
