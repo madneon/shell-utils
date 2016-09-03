@@ -25,6 +25,11 @@ d_out="$d_root/bkp/mysql"				# output directory
 login="root"							# database login
 password="?"							# database password
 
+# Specified config
+if [ "$1"X != X ]; then
+	f_in=$1
+fi
+
 # Load config
 if [ -f $f_in ]; then
 	. $f_in
