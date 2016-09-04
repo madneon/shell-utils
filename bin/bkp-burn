@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Copyright © 2012-2016 by madneon
+# http://madneon.com
+
+# Parameters
+d_root="/opt"						# root directory
+d_in="$d_root/var/bkp"				# input directory
+fs_in=*.tar.gz						# files
+f_log=/var/log/synve-bkp-burn.log	# log fole
+f_run_hold="/var/run/bkp.pid"		# hold file (bkp)
+
+
+# Log start
+echo -en "\nStart ($$): " >> $f_log
+date +"%F %T" >> $f_log
+
+# Check for "bkp" still running
+if [ -f $f_run_hold ]; then
+	echo -n "Waiting for bkp to finish, pid " >> $f_log
+	cat $f_run_hold >> $f_log
+	echo "..." >> $f_log
+fi
+
+while [ -f $f_run_hold ]; do
+	sleep 1
+done
+
+# Remove old md5 sums
+rm $d_in/$fs_in.md5
+
+# Calculate new md5 sums
+for f in $d_in/$fs_in; do
+	if [ -e "$f" ]; then
+		md5sum "$f"|cut -f1 -d" ">"$f".md5
+	fi
+done
+
+# Burn
+echo growisofs -use-the-force-luke=tty -Z /dev/sr0 -J -r -speed=1 -dvd-compat -pad -graft-points $d_in/$fs_in $d_in/$fs_in.md5 2>&1 >> $f_log
+
+# Log finish
+echo -en "Finish ($$): " >> $f_log
+date +"%F %T" >> $f_log
+
+# madneon 2014-09-14, 2016-09-04
