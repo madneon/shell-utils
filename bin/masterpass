@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# This code is Copyright 2013-2014 (c) madneon
-# For contact info see http://madneon.com
+# Copyright © 2013-2014 by madneon
+# http://madneon.com
 #
 # This script generates a password for your different sites/programs with your
 # master password as an "unlock". The usage is as follows:
@@ -15,7 +15,7 @@
 # Copy and paste generated password.
 # Your passwords are safe as long as nobody finds out your "master" password.
 #
-# Generated passowrd is hard to guess by brute-force, note that for 16-char long
+# Generated password is hard to guess by brute-force, note that for 16-char long
 # password there is: 1,877,213,388,752,445,800,995,314,794,496 combinations :)
 #
 # If you want shorter password type new integer length as parameter.
