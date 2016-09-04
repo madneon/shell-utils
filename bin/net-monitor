@@ -1,0 +1,103 @@
+#!/bin/bash
+
+# Copyright © 2015 by madneon
+# http://madneon.com
+
+script=`basename $0`
+
+function do_usage() {
+	echo "Usage: $script <target> [target2 [target3 [...]]] [--up <action>] [--down <action>] [--log <file>]"
+	echo "   eg. $script 194.204.159.1"
+	echo "   eg. $script 194.204.159.1 dns2.tpsa.pl --down 'synve-notify Net down!'"
+	exit 1
+}
+
+if [ -z "$1" ]; then
+	do_usage
+fi
+
+function do_ping() {
+	ping -c 1 -W $timeout $1 -q >> /dev/null
+}
+
+# const
+timeout=2
+delay=10
+
+# vars
+targets=''
+action_up=''
+action_down=''
+log=''
+
+# get command line params
+while [ -n "$1" ]; do
+	case $1 in
+		'--up')
+			action_up="$2"
+			shift
+			;;
+		'--down')
+			action_down="$2"
+			shift
+			;;
+		'--log')
+			log="$2"
+			shift
+			if [ ! -f "$log" ]; then
+				echo -n > "$log"
+				chmod 640 "$log"
+			else
+				echo -n >> "$log"
+			fi
+			;;
+		*)
+			targets="$targets $1"
+	esac
+	shift
+done
+
+# loop pings
+result_last=0
+
+tick=`date +%s`
+tick=$((tick+delay))
+while true; do
+	# pings
+	result=0
+	for target in $targets; do
+		do_ping $target
+		if [ $? != 0 ]; then
+			result=1
+			if [ -n "$log" ]; then
+				d=`date "+%F %T"`
+				echo -n "$d " >> $log
+				echo "No pong from: $target" >> $log
+			fi
+		fi
+	done
+
+	# delay
+	tick_new=`date +%s`
+	while [ $tick_new -lt $tick ]; do
+		tick_new=`date +%s`
+	done
+
+	tick=$tick_new
+	tick=$((tick+delay))
+
+	if [ $result_last != $result ]; then
+		if [ $result == 0 ]; then
+			if [ -n "$action_up" ]; then
+				$action_up
+			fi
+		else
+			if [ -n "$action_down" ]; then
+				$action_down
+			fi
+		fi
+		result_last=$result
+	fi
+done
+
+# madneon 2015-06-01

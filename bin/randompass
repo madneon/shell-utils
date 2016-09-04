@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Copyright © 2016 by madneon
+# http://madneon.com
+
+SIZE=15
+if [ -n "$1" ]; then
+	SIZE="$1"
+fi
+
+cat /dev/urandom| tr -dc "0-9a-zA-Z\`~!@#\$%^&*()_+-=[]\\{}|;':\",./<>?"|head -c $SIZE
+echo
+
+# madneon 2016-04-19

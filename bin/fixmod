@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Copyright © 2015 by madneon
+# http://madneon.com
+
+mod_f="644"
+mod_d="755"
+
+if [ -n "$1" ]; then
+	mod_f=$1
+fi
+
+if [ -n "$2" ]; then
+	mod_d=$2
+fi
+
+function f() {
+	while read a; do
+		mod=""
+		if [ -d "$a" ]; then
+			mod=$mod_d
+		else
+			if [ -f "$a" ]; then
+				mod=$mod_f
+			fi
+		fi
+		chmod -v $mod "$a"
+	done
+}
+
+if [ "$1" != "" ]; then
+	cd "$1"
+fi
+
+find *|f
+
+# madneon 2015-03-25

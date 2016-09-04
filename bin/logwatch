@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Copyright © 2014 by madneon
+# http://madneon.com
+
+function ck() {
+	for p in $children; do
+		pkill -P $p 2>&1 > /dev/null
+	done
+	exit
+}
+
+function dospace() {
+	while true; do
+		sleep 5
+		#echo -en "."
+		echo
+	done
+}
+
+function doread() {
+		while read l; do
+			echo -e "\r$1|$l"
+		done
+}
+
+function doone() {
+	tail -f $1 -n 0 --pid=$$|doread "$1"
+}
+
+files=""
+for f in `find -type f|grep -v ".gz$"`; do
+	files="$files\n"${f:2}
+done
+maxlen=`echo -e "$files"|wc -L`
+
+trap ck INT
+
+children=""
+for f in `find -type f|grep -v ".gz$"`; do
+	t=`printf "%"$maxlen"s" ${f:2}`
+#	doone "$f" &
+	tail -f "$f" -n 0 --pid=$$|doread "$t" &
+	children="$children $!"
+done
+
+if [ -n "$children" ]; then
+	dospace
+	children="$children $!"
+	wait
+fi
+
+# madneon 2014-03-01

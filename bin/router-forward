@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# Copyright © 2014-2015 by madneon
+# http://madneon.com
+
+function usage() {
+	echo "Usage: "`basename $0`" <on|off> <source_port> <destination_ip> [<destination_port> [<protocol>]]"
+	echo "   eg. "`basename $0`" on 10.0.0.90 21"
+	echo "   eg. "`basename $0`" on 9022 10.0.0.90 22"
+	echo "   eg. "`basename $0`" on 27015 10.0.0.61 27015 udp"
+	exit 1
+}
+
+if [ -z "$3" ]; then
+	usage
+fi
+
+action="$1"
+from_addr=`ip route get 1.1.1.1|awk '{print $NF;exit}'`
+from_port="$2"
+to_addr="$3"
+
+if [ -z "$4" ]; then
+	to_port="$from_port"
+else
+	to_port="$4"
+fi
+
+if [ -z "$5" ]; then
+	protocol='tcp'
+else
+	protocol=$5
+fi
+
+case "$action" in
+	"on")
+		iptables -t nat -A PREROUTING -p $protocol -d $from_addr --dport "$from_port" -j DNAT --to "$to_addr:$to_port"
+		iptables -I FORWARD -d "$to_addr/32" -p $protocol -m state --state NEW -m $protocol --dport "$to_port" -j ACCEPT
+		;;
+	"off")
+		iptables -t nat -D PREROUTING -p $protocol -d $from_addr --dport "$from_port" -j DNAT --to "$to_addr:$to_port"
+		iptables -D FORWARD -d "$to_addr/32" -p $protocol -m state --state NEW -m $protocol --dport "$to_port" -j ACCEPT
+		;;
+	*)
+		echo "Unknown action '$action'"
+		usage
+		;;
+esac
+
+# madneon 2014-12-16,2015-04-02
