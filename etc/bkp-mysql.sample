@@ -1,4 +1,4 @@
-# Sample input file for "bkp-mysql"
+# Sample config file for "bkp-mysql"
 
 login=root
 password=?

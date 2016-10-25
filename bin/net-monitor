@@ -8,7 +8,7 @@ script=`basename $0`
 function do_usage() {
 	echo "Usage: $script <target> [target2 [target3 [...]]] [--up <action>] [--down <action>] [--log <file>]"
 	echo "   eg. $script 194.204.159.1"
-	echo "   eg. $script 194.204.159.1 dns2.tpsa.pl --down 'synve-notify Net down!'"
+	echo "   eg. $script 194.204.159.1 dns2.tpsa.pl --down 'logger Net down!'"
 	exit 1
 }
 

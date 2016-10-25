@@ -17,7 +17,7 @@ date +"%F %T" >> $f_log
 
 # Check for "bkp" still running
 if [ -f $f_run_hold ]; then
-	echo -n "Waiting for bkp to finish, pid " >> $f_log
+	echo -n "Waiting for bkp to finish, PID " >> $f_log
 	cat $f_run_hold >> $f_log
 	echo "..." >> $f_log
 fi

@@ -7,7 +7,7 @@ f_run="/var/run/mdn-bkp.pid"	# lock file
 
 # Check if locked
 if [ -e $f_run ]; then
-	echo -n "Alredy running, pid "
+	echo -n "Alredy running, PID "
 	cat $f_run
 	exit 1
 fi

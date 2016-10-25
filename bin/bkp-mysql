@@ -3,11 +3,11 @@
 # Copyright © 2011-2016 by madneon
 # http://madneon.com
 
-f_run="/var/run/bkp-mysql.pid"
+f_run="/var/run/bkp-mysql.pid"	# lock file
 
 # Check if locked
 if [ -e $f_run ]; then
-	echo -n "Alredy running, pid "
+	echo -n "Alredy running, PID "
 	cat $f_run
 	exit 1
 fi

@@ -20,10 +20,10 @@ echo $pid > $f_run
 d_root="/opt"							# root directory
 d_in="$d_root/var/bkp"					# input directory
 d_out="$d_root/var/bkp-mirror"			# output directories (d_out*)
-f_in="$d_root/etc/bkp-mirrot"			# config file
+f_in="$d_root/etc/bkp-mirror"			# config file
 f_log="$d_root/var/log/bkp-mirror.log"	# log file
 f_run_hold="/var/run/bkp.pid"			# hold file (bkp)
-space_min=200							# minimum free space (MiB, must be greater than max transfer/sec)
+space_min=512							# minimum free space (MiB, must be greater than max transfer/sec)
 
 # Specified config
 if [ "$1"X != X ]; then
@@ -49,7 +49,7 @@ fi
 
 # Check for "bkp" still running
 if [ -f $f_run_hold ]; then
-	echo -n "Waiting for bkp to finish, pid " >> $f_log
+	echo -n "Waiting for bkp to finish, PID " >> $f_log
 	cat $f_run_hold >> $f_log
 	echo "..." >> $f_log
 fi
