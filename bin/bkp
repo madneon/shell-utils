@@ -48,7 +48,7 @@ function f() {
 
 		# command "stop"
 		a=`echo $u|cut -f1 -d":"`
-		s=`echo $u|cut -f2 -d":"`
+		s=`echo $u|cut -f2- -d":"`
 		if [ "$a"X == "stop"X ]; then
 			echo "Service stop: $s" >> $f_log
 			/etc/init.d/"$s" stop
@@ -71,6 +71,12 @@ function f() {
 		# command "dir"
 		if [ "$a"X == "dir"X ]; then
 			d_out="$s"
+			continue
+		fi
+
+		# command "exec"
+		if [ "$a"X == "exec"X ]; then
+			eval $s
 			continue
 		fi
 

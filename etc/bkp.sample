@@ -7,4 +7,5 @@ mysql				/var/lib/mysql
 start:mysqld
 method:zip
 dir:/mnt/ext-backup
+exec:rm -rf /home/pub/obsolete
 docs				/home/pub/docs
