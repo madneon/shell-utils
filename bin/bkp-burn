@@ -4,25 +4,43 @@
 # http://madneon.com
 
 # Parameters
-d_root="/opt"						# root directory
-d_in="$d_root/var/bkp"				# input directory
-fs_in=*.tar.gz						# files
-f_log=/var/log/synve-bkp-burn.log	# log fole
-f_run_hold="/var/run/bkp.pid"		# hold file (bkp)
+d_root="/opt"					# root directory
+d_in="$d_root/var/bkp"			# input directory
+fs_in=*.tar.gz					# files
+d_log="$d_root/var/log"			# log directory
+f_log="$d_log/bkp-burn.log"		# log file
+d_lock="$d_root/var/run"		# lock dir
+f_lock="$d_lock/bkp-burn.pid"	# lock file
+f_hold="$d_lock/bkp.pid"		# hold file (bkp)
 
+# Check if locked
+if [ -e $f_lock ]; then
+	echo -n "Alredy running, pid "
+	cat $f_lock
+	exit 1
+fi
 
-# Log start
+# Lock
+pid=$$
+echo $pid > $f_lock
+
+# Log
+if [ ! -d "$d_log" ]; then
+	mkdir -p "$d_log"
+	chmod 700 "$d_log"
+fi
+
 echo -en "\nStart ($$): " >> $f_log
 date +"%F %T" >> $f_log
 
 # Check for "bkp" still running
-if [ -f $f_run_hold ]; then
+if [ -f $f_hold ]; then
 	echo -n "Waiting for bkp to finish, PID " >> $f_log
-	cat $f_run_hold >> $f_log
+	cat $f_hold >> $f_log
 	echo "..." >> $f_log
 fi
 
-while [ -f $f_run_hold ]; do
+while [ -f $f_hold ]; do
 	sleep 1
 done
 
@@ -43,4 +61,4 @@ echo growisofs -use-the-force-luke=tty -Z /dev/sr0 -J -r -speed=1 -dvd-compat -p
 echo -en "Finish ($$): " >> $f_log
 date +"%F %T" >> $f_log
 
-# madneon 2014-09-14, 2016-09-04
+# madneon 2014-09-14, 2016-09-04, 2016-11-16

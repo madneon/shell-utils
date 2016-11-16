@@ -3,37 +3,42 @@
 # Copyright © 2010-2016 by madneon
 # http://madneon.com
 
-f_run="/var/run/mdn-bkp.pid"	# lock file
-
-# Check if locked
-if [ -e $f_run ]; then
-	echo -n "Alredy running, PID "
-	cat $f_run
-	exit 1
-fi
-
-# Lock
-echo $$ > $f_run
-
 # Parameters
 d_root="/opt"					# root directory
-f_log="$d_root/var/log/bkp.log"	# log file
+d_log="$d_root/var/log"			# log directory
+f_log="$d_log/bkp.log"			# log file
 f_in="$d_root/etc/bkp"			# config file
 d_out="$d_root/var/bkp"			# output directory
 age_max=17						# max file age, in days
 method="tar.gz"					# compress method
+d_lock="$d_root/var/run"		# lock dir
+f_lock="$d_lock/bkp.pid"		# lock file
+
+# Check if locked
+if [ -e $f_lock ]; then
+	echo -n "Alredy running, PID "
+	cat $f_lock
+	exit 1
+fi
+
+# Lock
+echo $$ > $f_lock
 
 # Load config
 if [ "$1"X != X ]; then
 	f_in=$1
 fi
 
-# Program
+# Log
+if [ ! -d "$d_log" ]; then
+	mkdir -p "$d_log"
+	chmod 700 "$d_log"
+fi
 
-# Log start time
 echo -en "\nStart ($$): " >> $f_log
 date +"%F %T" >> $f_log
 
+# Main process
 function f() {
 	while read u; do
 		# skip empty lines
@@ -138,6 +143,7 @@ function f() {
 	done
 }
 
+# Process input file
 cat $f_in|f
 
 # Log finish time
@@ -147,4 +153,4 @@ date +"%F %T" >> $f_log
 # Unlock
 rm $f_run
 
-# madneon 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03
+# madneon 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03, 2016-11-16

@@ -3,27 +3,28 @@
 # Copyright © 2010-2016 by madneon
 # http://madneon.com
 
-f_run="/var/run/bkp-mirror.pid"		# lock file
+# Parameters
+d_root="/opt"					# root directory
+d_in="$d_root/var/bkp"			# input directory
+d_out="$d_root/var/bkp-mirror"	# output directories (d_out*)
+f_in="$d_root/etc/bkp-mirror"	# config file
+d_log="$d_root/var/log"			# log directory
+f_log="$d_log/bkp-mirror.log"	# log file
+d_lock="$d_root/var/run"		# lock dir
+f_lock="$d_lock/bkp-mirror.pid"	# lock file
+f_hold="$d_lock/bkp.pid"		# hold file (bkp)
+space_min=512					# minimum free space (MiB, must be greater than max transfer/sec)
 
 # Check if locked
-if [ -e $f_run ]; then
+if [ -e $f_lock ]; then
 	echo -n "Alredy running, pid "
-	cat $f_run
+	cat $f_lock
 	exit 1
 fi
 
 # Lock
 pid=$$
-echo $pid > $f_run
-
-# Parameters
-d_root="/opt"							# root directory
-d_in="$d_root/var/bkp"					# input directory
-d_out="$d_root/var/bkp-mirror"			# output directories (d_out*)
-f_in="$d_root/etc/bkp-mirror"			# config file
-f_log="$d_root/var/log/bkp-mirror.log"	# log file
-f_run_hold="/var/run/bkp.pid"			# hold file (bkp)
-space_min=512							# minimum free space (MiB, must be greater than max transfer/sec)
+echo $pid > $f_lock
 
 # Specified config
 if [ "$1"X != X ]; then
@@ -35,7 +36,11 @@ if [ -f $f_in ]; then
 	. $f_in
 fi
 
-# Log start time
+# Log
+if [ ! -d "$d_log" ]; then
+	mkdir -p "$d_log"
+	chmod 700 "$d_log"
+fi
 echo -en "\nStart ($pid): " >> $f_log
 date +"%F %T" >> $f_log
 
@@ -43,18 +48,18 @@ date +"%F %T" >> $f_log
 if [ ! -d $d_in  ]; then
 	echo "Error: cannot access input directory, terminating" >> $f_log
 	# Unlock
-	rm $f_run
+	rm $f_lock
 	exit 1
 fi
 
 # Check for "bkp" still running
-if [ -f $f_run_hold ]; then
+if [ -f $f_hold ]; then
 	echo -n "Waiting for bkp to finish, PID " >> $f_log
-	cat $f_run_hold >> $f_log
+	cat $f_hold >> $f_log
 	echo "..." >> $f_log
 fi
 
-while [ -f $f_run_hold ]; do
+while [ -f $f_hold ]; do
 	sleep 1
 done
 
@@ -62,7 +67,7 @@ done
 space_min=$((space_min*1024))
 
 function df_check() {
-	while [ -f $f_run ]; do
+	while [ -f $f_lock ]; do
 		for d in $d_out*; do
 			if [ -d "$d" ]; then
 				r=1
@@ -109,6 +114,6 @@ date +"%F %T" >> $f_log
 sleep 2 # Last df_check
 
 # Unlock
-rm $f_run
+rm $f_lock
 
-# madneon 2010-06-07, 2011-05-14, 2012-08-18, 2014-12-14, 2016-09-03
+# madneon 2010-06-07, 2011-05-14, 2012-08-18, 2014-12-14, 2016-09-03, 2016-11-16
