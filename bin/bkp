@@ -22,7 +22,12 @@ if [ -e $f_lock ]; then
 fi
 
 # Lock
-echo $$ > $f_lock
+if [ ! -d "$d_lock" ]; then
+	mkdir -p "$d_lock"
+	chmod 700 "$d_lock"
+fi
+pid=$$
+echo $pid > $f_lock
 
 # Load config
 if [ "$1"X != X ]; then
@@ -151,6 +156,6 @@ echo -en "Finish ($$): " >> $f_log
 date +"%F %T" >> $f_log
 
 # Unlock
-rm $f_run
+rm $f_lock
 
 # madneon 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03, 2016-11-16

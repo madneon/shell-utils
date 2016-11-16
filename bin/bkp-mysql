@@ -21,8 +21,11 @@ if [ -e $f_lock ]; then
 fi
 
 # Lock
-pid=$$
-echo $pid > $f_lock
+if [ ! -d "$d_lock" ]; then
+	mkdir -p "$d_lock"
+	chmod 700 "$d_lock"
+fi
+echo $$ > $f_lock
 
 # Specified config
 if [ "$1"X != X ]; then
@@ -40,7 +43,7 @@ if [ ! -d "$d_log" ]; then
 	chmod 700 "$d_log"
 fi
 
-echo -en "\nStart: " >> $f_log
+echo -en "\nStart ($$): " >> $f_log
 date +"%F %T" >> $f_log
 
 # Create output directory
@@ -88,7 +91,7 @@ for db in $dbs; do
 done
 
 # Log finish time
-echo -en "Finish: " >> $f_log
+echo -en "Finish ($$): " >> $f_log
 date +"%F %T" >> $f_log
 
 # Unlock

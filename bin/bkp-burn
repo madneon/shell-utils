@@ -21,8 +21,11 @@ if [ -e $f_lock ]; then
 fi
 
 # Lock
-pid=$$
-echo $pid > $f_lock
+if [ ! -d "$d_lock" ]; then
+	mkdir -p "$d_lock"
+	chmod 700 "$d_lock"
+fi
+echo $$ > $f_lock
 
 # Log
 if [ ! -d "$d_log" ]; then
