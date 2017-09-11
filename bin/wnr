@@ -1,0 +1,41 @@
+#!/bin/bash
+
+if [ -z "$2" ]; then
+	echo "Usage: "`basename $0`" <file/dir> <command>"
+	exit 1
+fi
+
+t=$1
+shift
+
+"$@" &
+c=$!
+
+s=""
+
+function scan() {
+	s=""
+	for f in `find $t`; do
+		m=`stat -L --format %Y%Z "$f"`
+		s="$s$m"
+	done
+}
+
+scan
+
+p=$s
+
+while true; do
+	sleep 1
+	scan
+	if [ "$p" != "$s" ]; then
+		kill -INT $c
+		sleep 1
+		kill $c
+		"$@" &
+		c=$!
+		p=$s
+	fi
+done
+
+kill $c
