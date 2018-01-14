@@ -1,11 +1,14 @@
 # Sample input file for "bkp"
-etc					/etc
-root				/root
-log					/var/log
+etc 	/etc
+root	/root
+log 	/var/log
+
 stop:mysqld
-mysql				/var/lib/mysql
+mysql	/var/lib/mysql
 start:mysqld
+
 method:zip
 dir:/mnt/ext-backup
+files:*.txt
 exec:rm -rf /home/pub/obsolete
-docs				/home/pub/docs
+docs	/home/pub/docs

@@ -4,15 +4,17 @@
 # http://madneon.com
 
 # Parameters
-d_root="/opt"					# root directory
-d_log="$d_root/var/log"			# log directory
-f_log="$d_log/bkp.log"			# log file
-f_in="$d_root/etc/bkp"			# config file
-d_out="$d_root/var/bkp"			# output directory
-age_max=17						# max file age, in days
-method="tar.gz"					# compress method
-d_lock="$d_root/var/run"		# lock dir
-f_lock="$d_lock/bkp.pid"		# lock file
+d_root="/opt"           	# root directory
+d_log="$d_root/var/log" 	# log directory
+f_log="$d_log/bkp.log"  	# log file
+f_in="$d_root/etc/bkp"  	# config file
+d_out="$d_root/var/bkp" 	# output directory
+age_max=17              	# max file age, in days
+method="tar.gz"         	# compress method
+files="*"               	# files mask to backup
+files_addon=""          	#
+d_lock="$d_root/var/run"	# lock dir
+f_lock="$d_lock/bkp.pid"	# lock file
 
 # Check if locked
 if [ -e $f_lock ]; then
@@ -84,6 +86,17 @@ function f() {
 			continue
 		fi
 
+		# command "files"
+		if [ "$a"X == "files"X ]; then
+			files="$s"
+			if [ "$files"X == "*"X ]; then
+				files_addon=""
+			else
+				files_addon="$files"
+			fi
+			continue
+		fi
+
 		# command "exec"
 		if [ "$a"X == "exec"X ]; then
 			eval $s
@@ -129,13 +142,13 @@ function f() {
 		# compress
 		case "$method" in
 			"zip")
-				zip -qr9 .$fn.bkpnew $p/* &>> $f_log
+				zip -qr9 ".$fn.bkpnew" "$p/"$files_addon &>> $f_log
 				;;
 			"tar.bz2")
-				tar -Pcjf "./.$fn.bkpnew" "$p/" &>> $f_log
+				tar -Pcjf "./.$fn.bkpnew" "$p/"$files_addon &>> $f_log
 				;;
 			*)
-				tar -Pczf "./.$fn.bkpnew" "$p/" &>> $f_log
+				tar -Pczf "./.$fn.bkpnew" "$p/"$files_addon &>> $f_log
 				;;
 		esac
 		mv "./.$fn.bkpnew" "./$fn"
@@ -158,4 +171,4 @@ date +"%F %T" >> $f_log
 # Unlock
 rm $f_lock
 
-# madneon 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03, 2016-11-16
+# madneon 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03, 2016-11-16, 2018-01-14
