@@ -8,7 +8,7 @@ d_root="/opt"                   # root directory
 d_log="$d_root/var/log"         # log directory
 f_log="$d_log/bkp-mysql.log"    # log file
 f_in="$d_root/etc/bkp-mysql"    # config file
-d_out="$d_root/bkp/mysql"       # output directory
+d_out="$d_root/var/dump/mysql"  # output directory
 d_lock="$d_root/var/run"        # lock dir
 f_lock="$d_lock/bkp-mysql.pid"  # lock file
 login="root"                    # database login
@@ -48,9 +48,15 @@ echo -en "\nStart ($$): " >> $f_log
 date +"%F %T" >> $f_log
 
 # Create output directory
-mkdir -p $d_out
+if [ ! -d "$d_out" ]; then
+	mkdir -p "$d_out"
+	chmod 700 "$d_out"
+fi
+
 cd $d_out
-rm *.sql
+if [ -e *.sql ]; then
+	rm *.sql
+fi
 
 # Load list of databases
 dbs=`echo "SHOW DATABASES;"|mysql -u $login -p$password $db`

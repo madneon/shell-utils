@@ -8,7 +8,7 @@ mysql	/var/lib/mysql
 start:mysqld
 
 exec:/opt/bin/bkp-postgresql
-postgresql	/opt/bkp/postgresql
+postgresql	/opt/var/dump/postgresql
 
 method:zip
 dir:/mnt/ext-backup
