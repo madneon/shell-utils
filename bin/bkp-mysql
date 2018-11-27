@@ -4,14 +4,15 @@
 # http://madneon.com
 
 # Paramaters
-d_root="/opt"							# root directory
-f_log="$d_root/var/log/bkp-mysql.log"	# log file
-f_in="$d_root/etc/bkp-mysql"			# config file
-d_out="$d_root/bkp/mysql"				# output directory
-d_lock="$d_root/var/run"				# lock dir
-f_lock="$d_lock/bkp.pid"				# lock file
-login="root"							# database login
-password="?"							# database password
+d_root="/opt"                   # root directory
+d_log="$d_root/var/log"         # log directory
+f_log="$d_log/bkp-mysql.log"    # log file
+f_in="$d_root/etc/bkp-mysql"    # config file
+d_out="$d_root/bkp/mysql"       # output directory
+d_lock="$d_root/var/run"        # lock dir
+f_lock="$d_lock/bkp-mysql.pid"  # lock file
+login="root"                    # database login
+password="?"                    # database password
 
 # Check if locked
 if [ -e $f_lock ]; then
@@ -95,6 +96,6 @@ echo -en "Finish ($$): " >> $f_log
 date +"%F %T" >> $f_log
 
 # Unlock
-rm $f_run
+rm $f_lock
 
 # madneon 2011-05-14, 2015-01-02, 2016-09-03, 2016-11-16
