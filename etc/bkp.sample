@@ -18,3 +18,5 @@ docs	/home/pub/docs
 
 exec:dpkg --get-selections|grep -v deinstall|cut -f1>/opt/var/log/dpkg.log
 opt-log	/opt/var/log
+
+opt-etc	/opt/etc
