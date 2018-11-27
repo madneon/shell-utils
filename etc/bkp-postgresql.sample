@@ -1,0 +1,3 @@
+# Sample config file for "bkp-postgresql"
+
+login=postgres
