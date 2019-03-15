@@ -54,9 +54,7 @@ if [ ! -d "$d_out" ]; then
 fi
 
 cd $d_out
-if [ -e *.sql ]; then
-	rm *.sql
-fi
+rm *.sql 2> /dev/null || echo > /dev/null
 
 # Load list of databases
 dbs=`echo "SHOW DATABASES;"|mysql -u $login -p$password $db`

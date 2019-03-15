@@ -147,6 +147,9 @@ function f() {
 			"tar.bz2")
 				tar -Pcjf "./.$fn.bkpnew" "$p/"$files_addon &>> $f_log
 				;;
+			"tar.lzma")
+				tar --lzma -cf "./.$fn.bkpnew" "$p/"$files_addon &>> $f_log
+				;;
 			*)
 				tar -Pczf "./.$fn.bkpnew" "$p/"$files_addon &>> $f_log
 				;;
@@ -171,4 +174,4 @@ date +"%F %T" >> $f_log
 # Unlock
 rm $f_lock
 
-# madneon 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03, 2016-11-16, 2018-01-14
+# madneon 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03, 2016-11-16, 2018-01-14, 2019-03-01
