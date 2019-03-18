@@ -3,11 +3,25 @@
 # Copyright © 2010-2016 by madneon
 # http://madneon.com
 
+# Args
+# root directory
+if [ -n $1 ] && [[ $1  == -r ]] && [ -n $2 ]; then
+	d_root="$2"
+	shift 2
+else
+	d_root="/opt"
+fi
+# config file
+if [ -n $1 ] && [[ $1  == -c ]] && [ -n $2 ]; then
+	f_in="$2"
+	shift 2
+else
+	f_in="$d_root/etc/bkp"
+fi
+
 # Parameters
-d_root="/opt"           	# root directory
 d_log="$d_root/var/log" 	# log directory
 f_log="$d_log/bkp.log"  	# log file
-f_in="$d_root/etc/bkp"  	# config file
 d_out="$d_root/var/bkp" 	# output directory
 age_max=17              	# max file age, in days
 method="tar.gz"         	# compress method
@@ -30,11 +44,6 @@ if [ ! -d "$d_lock" ]; then
 fi
 pid=$$
 echo $pid > $f_lock
-
-# Load config
-if [ "$1"X != X ]; then
-	f_in=$1
-fi
 
 # Log
 if [ ! -d "$d_log" ]; then
@@ -150,6 +159,9 @@ function f() {
 			"tar.lzma")
 				tar --lzma -cf "./.$fn.bkpnew" "$p/"$files_addon &>> $f_log
 				;;
+			"tar")
+				tar -Pcf "./.$fn.bkpnew" "$p/"$files_addon &>> $f_log
+				;;
 			*)
 				tar -Pczf "./.$fn.bkpnew" "$p/"$files_addon &>> $f_log
 				;;
@@ -174,4 +186,4 @@ date +"%F %T" >> $f_log
 # Unlock
 rm $f_lock
 
-# madneon 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03, 2016-11-16, 2018-01-14, 2019-03-01
+# madneon 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03, 2016-11-16, 2018-01-14, 2019-03-01, 2019-03-18
