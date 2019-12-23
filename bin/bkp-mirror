@@ -13,7 +13,7 @@ f_log="$d_log/bkp-mirror.log"	# log file
 d_lock="$d_root/var/run"		# lock dir
 f_lock="$d_lock/bkp-mirror.pid"	# lock file
 f_hold="$d_lock/bkp.pid"		# hold file (bkp)
-space_min=512					# minimum free space (MiB, must be greater than max transfer/sec)
+space_min=2048					# minimum free space (MiB, must be greater than max transfer/sec)
 
 # Check if locked
 if [ -e $f_lock ]; then
@@ -34,18 +34,51 @@ if [ "$1"X != X ]; then
 	f_in=$1
 fi
 
-# Load config
-if [ -f $f_in ]; then
-	. $f_in
-fi
-
 # Log
 if [ ! -d "$d_log" ]; then
-	mkdir -p "$d_log"
+	mkdir -p "$d_log"f
 	chmod 700 "$d_log"
 fi
 echo -en "\nStart\t" >> $f_log
 date +"%F %T" >> $f_log
+
+# Pull remote servers
+declare -a umounts
+export umounts
+
+function pull() {
+	regex="(.+)@(.+)\:(.+)"
+	if [[ "$1" =~ $regex ]]; then
+		user="${BASH_REMATCH[1]}"
+		host="${BASH_REMATCH[2]}"
+		port="${BASH_REMATCH[3]}"
+
+		if [ -n "$2" ]; then
+			target="$2"
+		else
+			target="$host"
+		fi
+
+		if [ ! -d "$d_in/$target" ]; then
+			mkdir "$d_in/$target"
+		fi
+		if [ -n "$3" ]; then
+			key="$3"
+		else
+			key="/home/bkp/.ssh/id_rsa"
+		fi
+
+		umounts+=("$d_in/$target")
+		echo "Mounting remote: $user@$host:$port$d_in" >> $f_log
+		sudo sshfs -o ro,IdentityFile="$key" -p "$port" "$user"@"$host":"$d_in" "$d_in/$target"
+	fi
+}
+export -f pull
+
+# Load config
+if [ -f $f_in ]; then
+	. $f_in
+fi
 
 # Check input dir
 if [ ! -d $d_in  ]; then
@@ -113,6 +146,12 @@ done
 time_finish=`date +%s.%N`
 time_diff=`echo "$time_finish-$time_start"|bc`
 
+# Unmount
+for u in ${umounts[@]}; do
+	echo -e "Unmounting remote: $u" >> $f_log
+	sudo umount "$u"
+done
+
 # Log finish time
 echo -en "Finish\t" >> $f_log
 echo -n `date +"%F %T"` >> $f_log
@@ -123,4 +162,4 @@ sleep 2 # Last df_check
 # Unlock
 rm $f_lock
 
-# madneon 2010-06-07, 2011-05-14, 2012-08-18, 2014-12-14, 2016-09-03, 2016-11-16
+# madneon 2010-06-07, 2011-05-14, 2012-08-18, 2014-12-14, 2016-09-03, 2016-11-16, 2019-12-23

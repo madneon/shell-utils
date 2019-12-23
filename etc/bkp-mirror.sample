@@ -1,3 +1,6 @@
 # Sample config file for "bkp-mirror"
 
 space_min=512
+
+# SSHFS pulling example:
+pull bkp@example.com:22
