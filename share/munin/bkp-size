@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [ "$1"x == "configx" ]; then
+	echo graph_title Backup size
+	echo graph_vlabel bytes
+	echo size.label size
+	exit 0
+fi
+
 f_log=/opt/var/log/bkp.log
 
 if [ -r "$f_log" ]; then
@@ -8,6 +15,4 @@ else
 	size=0
 fi
 
-echo graph_title Backup size
-echo graph_vlabel bytes
 echo size.value $size

@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [ "$1"x == "configx" ]; then
+	echo graph_title Backup time
+	echo graph_vlabel seconds
+	echo time.label time
+	exit 0
+fi
+
 f_log=/opt/var/log/bkp.log
 
 if [ -r "$f_log" ]; then
@@ -8,6 +15,4 @@ else
 	time=0
 fi
 
-echo graph_title Backup time
-echo graph_vlabel seconds
 echo time.value $time

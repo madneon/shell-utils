@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [ "$1"x == "configx" ]; then
+	echo graph_title Backup mirror transfer size
+	echo graph_vlabel bytes
+	echo size.label size
+	exit 0
+fi
+
 f_log=/opt/var/log/bkp-mirror.log
 
 if [ -r "$f_log" ]; then
@@ -9,6 +16,4 @@ else
 	size=0
 fi
 
-echo graph_title Backup mirror transfer size
-echo graph_vlabel bytes
 echo size.value $size
