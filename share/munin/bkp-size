@@ -3,7 +3,7 @@
 f_log=/opt/var/log/bkp.log
 
 if [ -r "$f_log" ]; then
-	size=`grep $'^Finish\t' "$f_log"|tail -1|cut -f3 -d$'\t'`
+	size=`grep $'^Finish\t' "$f_log"|tail -1|cut -f4 -d$'\t'`
 else
 	size=0
 fi
