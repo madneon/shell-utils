@@ -9,5 +9,5 @@ else
 fi
 
 echo graph_title Backup size
-echo graph_vlabel size [B]
+echo graph_vlabel bytes
 echo size.value $size

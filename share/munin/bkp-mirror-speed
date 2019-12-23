@@ -10,5 +10,5 @@ else
 fi
 
 echo graph_title Backup mirror transfer speed
-echo graph_vlabel speed [B/s]
+echo graph_vlabel bytes / second
 echo speed.value $speed

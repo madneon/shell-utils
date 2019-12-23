@@ -9,5 +9,5 @@ else
 fi
 
 echo graph_title Backup time
-echo graph_vlabel time [s]
+echo graph_vlabel seconds
 echo time.value $time
