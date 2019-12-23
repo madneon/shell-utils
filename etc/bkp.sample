@@ -1,22 +1,30 @@
 # Sample input file for "bkp"
-etc 	/etc
-root	/root
-log 	/var/log
 
+# typical dirs
+etc			/etc
+root		/root
+log			/var/log
+
+# "start/stop" example
 stop:mysqld
-mysql	/var/lib/mysql
+mysql		/var/lib/mysql
 start:mysqld
 
+# "exec" example
 exec:/opt/bin/bkp-postgresql
 postgresql	/opt/var/dump/postgresql
 
+# target "method", "dir" and "files mask" example
 method:zip
 dir:/mnt/ext-backup
 files:*.txt
 exec:rm -rf /home/pub/obsolete
-docs	/home/pub/docs
+docs		/home/pub/docs
+method:tar.gz
 
-exec:dpkg --get-selections|grep -v deinstall|cut -f1>/opt/var/log/dpkg.log
-opt-log	/opt/var/log
+# installed packages
+exec:dpkg --get-selections|grep -v deinstall$|cut -f1>/opt/var/log/dpkg.log
 
-opt-etc	/opt/etc
+# /opt
+opt-etc		/opt/etc
+opt-log		/opt/var/log
