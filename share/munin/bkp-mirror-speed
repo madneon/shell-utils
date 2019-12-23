@@ -1,0 +1,14 @@
+#!/bin/bash
+
+f_log=/opt/var/log/bkp-mirror.log
+
+if [ -r "$f_log" ]; then
+	speed=`grep "^sent " "$f_log"|tail -1|tr -s '[:space:]'|cut -f7 -d" "`
+	speed=`echo "${speed//,}"`
+else
+	speed=0
+fi
+
+echo graph_title Backup mirror transfer speed
+echo graph_vlabel speed [B/s]
+echo speed.value $speed

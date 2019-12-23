@@ -50,12 +50,13 @@ if [ ! -d "$d_log" ]; then
 	mkdir -p "$d_log"
 	chmod 700 "$d_log"
 fi
-
-echo -en "\nStart ($$): " >> $f_log
+echo -en "\nStart\t" >> $f_log
 date +"%F %T" >> $f_log
 
 # Main process
 function f() {
+	total_size=0
+	time_start=`date +%s.%N`
 	while read u; do
 		# skip empty lines
 		if [ "$u" == "" ]; then
@@ -172,16 +173,21 @@ function f() {
 		if [ $? == 0 ]; then
 			s=`stat -c %s $fn`
 			echo -e "$s\t$fn" >> $f_log
+			total_size=$((total_size+s))
 		fi
 	done
+	time_finish=`date +%s.%N`
+	time_diff=`echo "$time_finish-$time_start"|bc`
+	echo -en "$time_diff\t$total_size"
 }
 
 # Process input file
-cat $f_in|f
+stats=`cat $f_in|f`
 
 # Log finish time
-echo -en "Finish ($$): " >> $f_log
-date +"%F %T" >> $f_log
+echo -en "Finish\t" >> $f_log
+echo -n `date +"%F %T"` >> $f_log
+echo -e "\t$stats" >> $f_log
 
 # Unlock
 rm $f_lock

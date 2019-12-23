@@ -1,0 +1,13 @@
+#!/bin/bash
+
+f_log=/opt/var/log/bkp.log
+
+if [ -r "$f_log" ]; then
+	time=`grep $'^Finish\t' "$f_log"|tail -1|cut -f4 -d$'\t'`
+else
+	time=0
+fi
+
+echo graph_title Backup time
+echo graph_vlabel time [s]
+echo time.value $time

@@ -44,7 +44,7 @@ if [ ! -d "$d_log" ]; then
 	mkdir -p "$d_log"
 	chmod 700 "$d_log"
 fi
-echo -en "\nStart ($$): " >> $f_log
+echo -en "\nStart\t" >> $f_log
 date +"%F %T" >> $f_log
 
 # Check input dir
@@ -103,16 +103,20 @@ function df_check() {
 df_check &
 
 # Sync mounted dirs
+time_start=`date +%s.%N`
 for d in $d_out*; do
 	if [ -d "$d" ]; then
 		echo "$d_in -> $d" >> $f_log
 		rsync --exclude=".*.bkpnew" -av "$d_in/" "$d/" &>> $f_log
 	fi
 done
+time_finish=`date +%s.%N`
+time_diff=`echo "$time_finish-$time_start"|bc`
 
 # Log finish time
-echo -en "\nFinish ($$): " >> $f_log
-date +"%F %T" >> $f_log
+echo -en "Finish\t" >> $f_log
+echo -n `date +"%F %T"` >> $f_log
+echo -e "\t$time_diff" >> $f_log
 
 sleep 2 # Last df_check
 

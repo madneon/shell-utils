@@ -1,0 +1,14 @@
+#!/bin/bash
+
+f_log=/opt/var/log/bkp-mirror.log
+
+if [ -r "$f_log" ]; then
+	size=`grep "^sent " "$f_log"|tail -1|tr -s '[:space:]'|cut -f2 -d" "`
+	size=`echo "${size//,}"`
+else
+	size=0
+fi
+
+echo graph_title Backup mirror transfer size
+echo graph_vlabel size [B]
+echo size.value $size
