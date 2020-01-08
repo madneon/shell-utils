@@ -114,8 +114,10 @@ function f() {
 		fi
 
 		# create output directory
-		mkdir -p $d_out
-		chmod 700 $d_out
+		if [ ! -d "$d_out" ]; then
+			mkdir -p $d_out
+			chmod 750 $d_out
+		fi
 		cd $d_out
 
 		if [ `pwd`X != "$d_out"X ]; then
