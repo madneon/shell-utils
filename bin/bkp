@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright © 2010-2016 by madneon
+# Copyright © 2010-2020 by madneon
 # http://madneon.com
 
 # Args
@@ -18,6 +18,7 @@ if [ -n $1 ] && [[ $1  == -c ]] && [ -n $2 ]; then
 else
 	f_in="$d_root/etc/bkp"
 fi
+d_in="$f_in"".d"
 
 # Parameters
 d_log="$d_root/var/log" 	# log directory
@@ -56,7 +57,6 @@ date +"%F %T" >> $f_log
 # Main process
 function f() {
 	total_size=0
-	time_start=`date +%s.%N`
 	while read u; do
 		# skip empty lines
 		if [ "$u" == "" ]; then
@@ -178,20 +178,37 @@ function f() {
 			total_size=$((total_size+s))
 		fi
 	done
-	time_finish=`date +%s.%N`
-	time_diff=`echo "$time_finish-$time_start"|bc`
 	echo -en "$time_diff\t$total_size"
 }
 
-# Process input file
-stats=`cat $f_in|f`
+# Stats - begin
+time_start=`date +%s.%N`
+
+# Process main input file
+if [ -f $f_in ]; then
+	total_size=`cat $f_in|f`
+else
+	total_size=0
+fi
+
+# Process additional input files
+if [ -d "$f_in"".d" ]; then
+	for f in "$f_in"".d/"*; do
+		size=`cat $f|f`
+		total_size=$((total_size + size))
+	done
+fi
+
+# Stats - end
+time_finish=`date +%s.%N`
+time_diff=`echo "$time_finish-$time_start"|bc`
 
 # Log finish time
 echo -en "Finish\t" >> $f_log
 echo -n `date +"%F %T"` >> $f_log
-echo -e "\t$stats" >> $f_log
+echo -e "\t$time_diff\t$total_size"  >> $f_log
 
 # Unlock
 rm $f_lock
 
-# madneon 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03, 2016-11-16, 2018-01-14, 2019-03-01, 2019-03-18
+# madneon 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03, 2016-11-16, 2018-01-14, 2019-03-01, 2019-03-18, 2020-02-21
