@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright © 2014 by madneon
+# Copyright © 2014,2020 by madneon
 # http://madneon.com
 
 function ck() {
@@ -10,22 +10,22 @@ function ck() {
 	exit
 }
 
-function dospace() {
+function do_space() {
 	while true; do
-		sleep 5
+		sleep 10
 		#echo -en "."
 		echo
 	done
 }
 
-function doread() {
+function do_read() {
 		while read l; do
 			echo -e "\r$1|$l"
 		done
 }
 
 function doone() {
-	tail -f $1 -n 0 --pid=$$|doread "$1"
+	tail -f $1 -n 0 --pid=$$|do_read "$1"
 }
 
 files=""
@@ -40,14 +40,16 @@ children=""
 for f in `find -type f|grep -v ".gz$"`; do
 	t=`printf "%"$maxlen"s" ${f:2}`
 #	doone "$f" &
-	tail -f "$f" -n 0 --pid=$$|doread "$t" &
+	tail -f "$f" -n 0 --pid=$$|do_read "$t" &
 	children="$children $!"
 done
 
 if [ -n "$children" ]; then
-	dospace
+	if [ "$1"x != "-s"x ]; then
+		do_space
+	fi
 	children="$children $!"
 	wait
 fi
 
-# madneon 2014-03-01
+# madneon 2014-03-01, 2020-04-03
