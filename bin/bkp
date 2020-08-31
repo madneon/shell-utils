@@ -178,7 +178,7 @@ function f() {
 			total_size=$((total_size+s))
 		fi
 	done
-	echo -en "$time_diff\t$total_size"
+	echo -n "$total_size"
 }
 
 # Stats - begin
