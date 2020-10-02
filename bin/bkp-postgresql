@@ -60,7 +60,7 @@ dbs=`su -c "psql -qAtc 'SELECT datname FROM pg_database'" - $login|egrep -v 'tem
 
 for db in $dbs; do
 	# dump
-	su -c "pg_dump -bcCo $db" - $login > $db.sql
+	su -c "pg_dump -bcC $db" - $login > $db.sql
 
 	r=$?
 
