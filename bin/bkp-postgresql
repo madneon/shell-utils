@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright © 2018 by madneon
+# Copyright © 2018-2020 by madneon
 # http://madneon.com
 
 # Paramaters
@@ -53,22 +53,33 @@ if [ ! -d "$d_out" ]; then
 fi
 
 cd $d_out
-rm *.sql 2> /dev/null || echo > /dev/null
 
-# Load list of databases
-dbs=`su -c "psql -qAtc 'SELECT datname FROM pg_database'" - $login|egrep -v 'template[01]'`
+# Load list of clusters
+pg_lsclusters|tail -n +2|while read -r cl; do
+	clv=`echo $cl|cut -f1 -d ' '`
+	cln=`echo $cl|cut -f2 -d ' '`
 
-for db in $dbs; do
-	# dump
-	su -c "pg_dump -bcC $db" - $login > $db.sql
-
-	r=$?
-
-	# log result
-	if [ $r == 0 ]; then
-		s=`stat -c %s $db.sql`
-		echo -e "$s\t$db.sql" >> $f_log
+	if [ -e $clv/$cln ]; then
+		rm -rf $clv/$cln
 	fi
+	mkdir -p $clv/$cln/
+
+	# Load list of databases
+	dbs=`su -c "psql --cluster $clv/$cln -qAtc 'SELECT datname FROM pg_database'" - $login|egrep -v 'template[01]'`
+
+	for db in $dbs; do
+		# dump
+		su -c "pg_dump --cluster $clv/$cln -bcC $db" - $login > $clv/$cln/$db.sql
+
+		r=$?
+
+		# log result
+		if [ $r == 0 ]; then
+			s=`stat -c %s $clv/$cln/$db.sql`
+			echo -e "$s\t$clv/$cln/$db.sql" >> $f_log
+		fi
+	done
+
 done
 
 # Log finish time
@@ -78,4 +89,4 @@ date +"%F %T" >> $f_log
 # Unlock
 rm $f_lock
 
-# madneon 2018-11-26
+# madneon 2018-11-26, 2020-12-03
