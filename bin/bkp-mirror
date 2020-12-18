@@ -13,7 +13,7 @@ f_log="$d_log/bkp-mirror.log"	# log file
 d_lock="$d_root/var/run"		# lock dir
 f_lock="$d_lock/bkp-mirror.pid"	# lock file
 f_hold="$d_lock/bkp.pid"		# hold file (bkp)
-space_min=2048					# minimum free space (MiB, must be greater than max transfer/sec)
+space_min=2048					# minimum free space to keep (MiB, must be greater than max transfer/sec)
 
 # Check if locked
 if [ -e $f_lock ]; then
@@ -100,15 +100,13 @@ while [ -f $f_hold ]; do
 done
 
 # Background job - check free space, delete oldest archives if needed
-space_min=$((space_min*1024))
-
 function df_check() {
 	while [ -f $f_lock ]; do
 		for d in $d_out*; do
 			if [ -d "$d" ]; then
 				r=1
 				while [ $r == 1 ]; do
-					df=`echo \`df $d\`|cut -f11 -d" "`
+					df=`df -m $d|tail -1|tr -s " "|cut -f4 -d" "`
 					if [ $df -lt $space_min ]; then
 						r=1
 					else
