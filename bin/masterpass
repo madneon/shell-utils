@@ -1,22 +1,19 @@
 #!/bin/bash
 
-# Copyright © 2013-2014 by madneon
+# Copyright © 2013-2020 by madneon
 # http://madneon.com
 #
 # This script generates a password for your different sites/programs with your
 # master password as an "unlock". The usage is as follows:
-# Choose (and remember well!) a "master password". Enter it every time this
-# script asks. Then enter your "reason password".
+# Choose and remember "master password" and "reason".
 #
 # Example:
 # Let's assume your master password is: "g00nie!2", and you want a password for
-# registering new account at a site "github.com".
-# Enter a "g00nie!2" as "master" and "github" as "reason".
-# Copy and paste generated password.
+# registering new account at a site "gitlab.com".
+# Enter a "g00nie!2" as "master" and "gitlab" as "reason".
+# Your generated password is copied to clipboard by default (use "-p" to
+# display it instead).
 # Your passwords are safe as long as nobody finds out your "master" password.
-#
-# Generated password is hard to guess by brute-force, note that for 16-char long
-# password there is: 1,877,213,388,752,445,800,995,314,794,496 combinations :)
 #
 # If you want shorter password type new integer length as parameter.
 #
@@ -24,6 +21,15 @@
 
 # Allowed chars in password, it must be 79B long (offset 0-78)
 chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-[],.~!@#%^&_+|{}"
+
+# Command line argument - print instead of copying to clipboard
+stdout=0
+if [ -n "$1" ]; then
+	if [ "$1" == "-p" ]; then
+		stdout=1
+		shift
+	fi
+fi
 
 # Command line argument - desired password length
 if [ -n "$1" ]; then
@@ -80,4 +86,10 @@ for (( i=0; "$i" != "$l" ; i=$((i+1)) )); do
 	p="$p$c"
 done
 
-echo "$p"
+if [ $stdout == 1 ]; then
+	echo "$p"
+else
+	echo -n "$p"|xclip -selection c
+fi
+
+# madneon 2020-12-24
