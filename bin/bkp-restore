@@ -19,6 +19,17 @@ else
 	f_in="$d_root/etc/bkp-restore"
 fi
 d_in="$f_in"".d"
+# non-interactive restore
+quiet=""
+if [ -n "$1" ]; then
+	r='^-[1-9]+[0-9]*$'
+	if [[ $1 =~ $r ]]; then
+		quiet=$1
+	else
+		echo "Error: Invalid number."
+		exit 1
+	fi
+fi
 
 # Parameters
 d_log="$d_root/var/log"           # log directory
@@ -91,6 +102,10 @@ function f() {
 		# list archives
 		dt=`date +%s`
 		list=""
+		if [ "$quiet" != "" ]; then
+			count=0
+		fi
+
 		for f in `ls -1 $n* 2> /dev/null|sort -r`; do
 			if [ ! -f $f ];then
 				continue
@@ -114,29 +129,45 @@ function f() {
 			age=$(($age-($age_m*60)))
 			age_s=$(printf "%02dd_%02dh_%02dm_%02ds" "$age_d" "$age_h" "$age_m" "$age")
 
-			list="$list $f $age_s"
+			if [ "$quiet" != "" ]; then
+				count=$((count - 1))
+				if [[ $count == $quiet ]]; then
+					break
+				fi
+			else
+				list="$list $f $age_s"
+			fi
 		done
 
-		if [ -z "$list" ]; then
-			continue
-		fi
-
-		dialog --clear --extra-button --extra-label "Skip" --menu "Restore \"$u\":" 20 0 40 $list 2>> $tmpd
-		case "$?" in
-			0)
-				echo -n "$d_out"/ >> $tmp
-				cat $tmpd >> $tmp
-				echo >> $tmp
-				rm $tmpd
-				;;
-			1)
-				rm $tmpd
+		if [ "$quiet" != "" ]; then
+			if [ $count == $quiet ]; then
+				echo "$d_out"/"$f" >> $tmp
+			else
+				echo "Error: Archive aged \"$quiet\" not found for \"$u\"."
 				exit 1
-				;;
-			*)
-				rm $tmpd
-				;;
-		esac
+			fi
+		else
+			if [ -z "$list" ]; then
+				continue
+			fi
+
+			dialog --clear --extra-button --extra-label "Skip" --menu "Restore \"$u\":" 20 0 40 $list 2>> $tmpd
+			case "$?" in
+				0)
+					echo -n "$d_out"/ >> $tmp
+					cat $tmpd >> $tmp
+					echo >> $tmp
+					rm $tmpd
+					;;
+				1)
+					rm $tmpd
+					exit 1
+					;;
+				*)
+					rm $tmpd
+					;;
+			esac
+		fi
 	done
 }
 
