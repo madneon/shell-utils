@@ -1,0 +1,264 @@
+#!/bin/bash
+
+# Copyright © 2021 by madneon
+# http://madneon.com
+
+# Args
+# root directory
+if [ -n $1 ] && [[ $1  == -r ]] && [ -n $2 ]; then
+	d_root="$2"
+	shift 2
+else
+	d_root="/opt"
+fi
+# config file
+if [ -n $1 ] && [[ $1  == -c ]] && [ -n $2 ]; then
+	f_in="$2"
+	shift 2
+else
+	f_in="$d_root/etc/bkp-restore"
+fi
+d_in="$f_in"".d"
+
+# Parameters
+d_log="$d_root/var/log"           # log directory
+f_log="$d_log/bkp-restore.log"    # log file
+d_out="$d_root/var/bkp"           # output directory
+age_max=17                        # max file age, in days
+d_lock="$d_root/var/run"          # lock dir
+f_lock="$d_lock/bkp-restore.pid"  # lock file
+
+# Check if locked
+if [ -e $f_lock ]; then
+	echo -n "Alredy running, PID "
+	cat $f_lock
+	exit 1
+fi
+
+# Log
+if [ ! -d "$d_log" ]; then
+	mkdir -p "$d_log"
+	chmod 700 "$d_log"
+fi
+
+# Lock prepare
+if [ ! -d "$d_lock" ]; then
+	mkdir -p "$d_lock"
+	chmod 700 "$d_lock"
+fi
+
+# tmp prepare
+tmp="/tmp/bkp-restore-$$"
+tmpd="$tmp"d
+echo -n > $tmp
+
+# Decision process
+function f() {
+	while read u; do
+		# skip empty lines
+		if [ "$u" == "" ]; then
+			continue
+		fi
+
+		# skip comments
+		if [ `echo $u|cut -b1`X == "#X" ]; then
+			continue
+		fi
+
+		# commands
+		a=`echo $u|cut -f1 -d":"`
+		if [ "$a"X == "stop"X ] || [ "$a"X == "start"X ] || [ "$a"X == "restart"X ] || [ "$a"X == "exec"X ]; then
+			echo "$u" >> $tmp
+			continue
+		fi
+
+		# command "dir"
+		if [ "$a"X == "dir"X ]; then
+			d_out="$s"
+			continue
+		fi
+
+		cd $d_out
+
+		if [ `pwd`X != "$d_out"X ]; then
+			echo "Error: cannot access output directory $d_out `pwd`" >> $f_log
+			exit 1
+		fi
+
+		# archive name
+		n=`echo $u|cut -f1 -d" "`
+
+		# list archives
+		dt=`date +%s`
+		list=""
+		for f in `ls -1 $n* 2> /dev/null|sort -r`; do
+			if [ ! -f $f ];then
+				continue
+			fi
+
+			fn=`echo $f|cut -f1 -d"_"`
+			if [ "$fn" != "$n" ]; then
+				continue
+			fi
+
+			fd=`echo $f|cut -f2 -d"_"`
+			ft=`echo $f|cut -f3 -d"_"|cut -b-8`
+			fdt=`date +%s --date "$fd $ft"`
+			age=$((dt-fdt))
+
+			age_d=$(($age/86400))
+			age=$(($age-($age_d*86400)))
+			age_h=$(($age/3600))
+			age=$((age-($age_h*3600)))
+			age_m=$(($age/60))
+			age=$(($age-($age_m*60)))
+			age_s=$(printf "%02dd_%02dh_%02dm_%02ds" "$age_d" "$age_h" "$age_m" "$age")
+
+			list="$list $f $age_s"
+		done
+
+		if [ -z "$list" ]; then
+			continue
+		fi
+
+		dialog --clear --extra-button --extra-label "Skip" --menu "Restore \"$u\":" 20 0 40 $list 2>> $tmpd
+		case "$?" in
+			0)
+				echo -n "$d_out"/ >> $tmp
+				cat $tmpd >> $tmp
+				echo >> $tmp
+				rm $tmpd
+				;;
+			1)
+				rm $tmpd
+				exit 1
+				;;
+			*)
+				rm $tmpd
+				;;
+		esac
+	done
+}
+
+# Main process
+function p() {
+	total_size=0
+	while read u; do
+		# commands
+		a=`echo $u|cut -f1 -d":"`
+		s=`echo $u|cut -f2- -d":"`
+
+		# command "stop"
+		if [ "$a"X == "stop"X ]; then
+			echo "Service stop: $s" >> $f_log
+			systemctl stop "$s"
+			continue
+		fi
+
+		# command "start"
+		if [ "$a"X == "start"X ]; then
+			echo "Service start: $s" >> $f_log
+			systemctl start "$s"
+			continue
+		fi
+
+		# command "restart"
+		if [ "$a"X == "restart"X ]; then
+			echo "Service restart: $s" >> $f_log
+			systemctl restart "$s"
+			continue
+		fi
+
+		# command "exec"
+		if [ "$a"X == "exec"X ]; then
+			eval $s
+			continue
+		fi
+
+		echo Restoring \"$u\"...
+		method=${u#*.}
+
+		# compress
+		case "$method" in
+			"tar.bz2")
+				tar -Pxjf "$u" -C / >> $f_log
+				;;
+			"tar.lzma")
+				tar --lzma -Pxf "$u" -C / >> $f_log
+				;;
+			"tar")
+				tar -Pxf "$u" "$p/"$files_addon >> $f_log
+				;;
+			*)
+				tar -Pxzf "$u" -C / &>> $f_log
+				;;
+		esac
+
+		# log archive size and name
+		if [ $? == 0 ]; then
+			s=`stat -c %s $u`
+			echo -e "$s\t$u" >> $f_log
+			total_size=$((total_size+s))
+		fi
+	done
+	echo -n $total_size > "$tmp"
+}
+
+echo -n > $tmp
+
+# Process main input file
+if [ -f $f_in ]; then
+	cat $f_in|f
+	case "$?" in
+		0)
+			;;
+		*)
+			rm $tmp
+			exit 1
+			;;
+	esac
+fi
+
+# Process additional input files
+if [ -d "$d_in" ]; then
+	for f in "$d_in"/*; do
+		cat $f|f
+		case "$?" in
+			0)
+				;;
+			*)
+				rm $tmp
+				exit 1
+				;;
+		esac
+	done
+
+fi
+
+# Lock
+pid=$$
+echo $pid > $f_lock
+
+# Stats - begin
+time_start=`date +%s.%N`
+echo -en "\nStart\t" >> $f_log
+date +"%F %T" >> $f_log
+
+cat $tmp|p
+total_size=`cat $tmp`
+
+rm $tmp
+
+# Stats - end
+time_finish=`date +%s.%N`
+time_diff=`echo "$time_finish-$time_start"|bc`
+
+# Log finish time
+echo -en "Finish\t" >> $f_log
+echo -n `date +"%F %T"` >> $f_log
+echo -e "\t$time_diff\t$total_size" >> $f_log
+
+# Unlock
+rm $f_lock
+
+# madneon 2021-03-01

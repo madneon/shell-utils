@@ -73,14 +73,14 @@ function f() {
 		s=`echo $u|cut -f2- -d":"`
 		if [ "$a"X == "stop"X ]; then
 			echo "Service stop: $s" >> $f_log
-			/etc/init.d/"$s" stop
+			systemctl stop "$s"
 			continue
 		fi
 
 		# command "start"
 		if [ "$a"X == "start"X ]; then
 			echo "Service start: $s" >> $f_log
-			/etc/init.d/"$s" start
+			systemctl start "$s"
 			continue
 		fi
 
@@ -134,9 +134,9 @@ function f() {
 			fd=`echo $f|cut -f2 -d"_"`
 			ft=`echo $f|cut -f3 -d"_"|cut -b-8`
 			fdt=`date +%s --date "$fd $ft"`
-			a=$((dt-fdt))
-			a=$((a/86400))
-			if [ $a -gt $age_max ]; then
+			age=$((dt-fdt))
+			age=$((age/86400))
+			if [ $age -gt $age_max ]; then
 				rm -v $f &>> $f_log
 			fi
 		done
@@ -153,9 +153,6 @@ function f() {
 
 		# compress
 		case "$method" in
-			"zip")
-				zip -qr9 ".$fn.bkpnew" "$p/"$files_addon &>> $f_log
-				;;
 			"tar.bz2")
 				tar -Pcjf "./.$fn.bkpnew" "$p/"$files_addon &>> $f_log
 				;;
@@ -192,8 +189,8 @@ else
 fi
 
 # Process additional input files
-if [ -d "$f_in"".d" ]; then
-	for f in "$f_in"".d/"*; do
+if [ -d "$d_in" ]; then
+	for f in "$d_in"/*; do
 		size=`cat $f|f`
 		total_size=$((total_size + size))
 	done
@@ -206,9 +203,9 @@ time_diff=`echo "$time_finish-$time_start"|bc`
 # Log finish time
 echo -en "Finish\t" >> $f_log
 echo -n `date +"%F %T"` >> $f_log
-echo -e "\t$time_diff\t$total_size"  >> $f_log
+echo -e "\t$time_diff\t$total_size" >> $f_log
 
 # Unlock
 rm $f_lock
 
-# madneon 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03, 2016-11-16, 2018-01-14, 2019-03-01, 2019-03-18, 2020-02-21
+# madneon 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03, 2016-11-16, 2018-01-14, 2019-03-01, 2019-03-18, 2020-02-21, 2021-03-01
