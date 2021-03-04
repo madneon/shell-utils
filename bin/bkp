@@ -28,6 +28,7 @@ age_max=17              	# max file age, in days
 method="tar.gz"         	# compress method
 files="*"               	# files mask to backup
 files_addon=""          	#
+exclude_addon=""          	#
 d_lock="$d_root/var/run"	# lock dir
 f_lock="$d_lock/bkp.pid"	# lock file
 
@@ -102,7 +103,19 @@ function f() {
 			if [ "$files"X == "*"X ]; then
 				files_addon=""
 			else
-				files_addon="$files"
+				files_addon="'$files'"
+			fi
+			continue
+		fi
+
+		# command "exclude"
+		if [ "$a"X == "exclude"X ]; then
+			if [ "$s"X == ""X ]; then
+				exclude_addon=""
+			else
+				for x in $s; do
+					exclude_addon=" $exclude_addon --exclude $x"
+				done
 			fi
 			continue
 		fi
@@ -154,16 +167,16 @@ function f() {
 		# compress
 		case "$method" in
 			"tar.bz2")
-				tar -Pcjf "./.$fn.bkpnew" "$p/"$files_addon &>> $f_log
+				tar -Pcjf "./.$fn.bkpnew"$exclude_addon "$p/"$files_addon &>> $f_log
 				;;
 			"tar.lzma")
-				tar --lzma -cf "./.$fn.bkpnew" "$p/"$files_addon &>> $f_log
+				tar --lzma -cf "./.$fn.bkpnew"$exclude_addon "$p/"$files_addon &>> $f_log
 				;;
 			"tar")
-				tar -Pcf "./.$fn.bkpnew" "$p/"$files_addon &>> $f_log
+				tar -Pcf "./.$fn.bkpnew"$exclude_addon "$p/"$files_addon &>> $f_log
 				;;
 			*)
-				tar -Pczf "./.$fn.bkpnew" "$p/"$files_addon &>> $f_log
+				tar -Pczf "./.$fn.bkpnew"$exclude_addon "$p/"$files_addon &>> $f_log
 				;;
 		esac
 		mv "./.$fn.bkpnew" "./$fn"

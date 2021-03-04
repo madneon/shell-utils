@@ -15,7 +15,7 @@ exec:/opt/bin/bkp-postgresql
 postgresql	/opt/var/dump/postgresql
 
 # target "method", "dir" and "files mask" example
-method:zip
+method:tar.bz2
 dir:/mnt/ext-backup
 files:*.txt
 exec:rm -rf /home/pub/obsolete
