@@ -150,7 +150,7 @@ function f() {
 			age=$((dt-fdt))
 			age=$((age/86400))
 			if [ $age -gt $age_max ]; then
-				rm -v $f &>> $f_log
+				rm -vrf $f &>> $f_log
 			fi
 		done
 

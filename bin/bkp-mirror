@@ -117,10 +117,10 @@ function df_check() {
 						cd $d
 						#todo: implement other "bkp" "methods"
 						oldest=`find *|grep -v casual|grep "_....-..-.._..:..:..\.tar\.gz$"|rev|cut -b-26|rev|sort|head -1`
-						fs=`find *|grep "$oldest$"`
+						fs=`find *|grep "$oldest"`
 						for f in $fs; do
 							echo -n "($d_out) " >> $f_log
-							rm -v $f >> $f_log
+							rm -vrf $f >> $f_log
 						done
 					fi
 				done
