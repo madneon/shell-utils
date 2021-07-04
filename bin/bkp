@@ -103,7 +103,7 @@ function f() {
 			if [ "$files"X == "*"X ]; then
 				files_addon=""
 			else
-				files_addon="'$files'"
+				files_addon="$files"
 			fi
 			continue
 		fi
