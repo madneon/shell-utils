@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# Copyright © 2021 by madneon
+# http://madneon.com
+
+# Paramaters
+d_root="/opt"                        # root directory
+d_log="$d_root/var/log"              # log directory
+f_log="$d_log/bkp-oracle.log"        # log file
+d_out="$d_root/var/dump/oracle"      # output directory
+d_lock="$d_root/var/run"             # lock dir
+f_lock="$d_lock/bkp-oracle.pid"      # lock file
+
+# Check if locked
+if [ -e $f_lock ]; then
+	echo -n "Alredy running, pid "
+	cat $f_lock
+	exit 1
+fi
+
+# Lock
+if [ ! -d "$d_lock" ]; then
+	mkdir -p "$d_lock"
+	chmod 700 "$d_lock"
+fi
+echo $$ > $f_lock
+
+# Log
+if [ ! -d "$d_log" ]; then
+	mkdir -p "$d_log"
+	chmod 700 "$d_log"
+fi
+
+echo -en "\nStart ($$): " >> $f_log
+date +"%F %T" >> $f_log
+
+# Create output directory
+if [ ! -d "$d_out" ]; then
+	mkdir -p "$d_out"
+	chmod 700 "$d_out"
+fi
+
+cd $d_out
+rm -rf expdp*
+
+# Stats - begin
+time_start=`date +%s.%N`
+total_size=0
+
+# Dump
+expdp $ORACLE_ADMIN_USER/$ORACLE_ADMIN_PASSWORD full=Y EXCLUDE=SCHEMA:\"LIKE \'APEX_%\'\",SCHEMA:\"LIKE \'FLOWS_%\'\" directory=DUMP_DIR dumpfile=expdp.dump logfile=expdp.log
+
+# Stats - end
+time_finish=`date +%s.%N`
+time_diff=`echo "$time_finish-$time_start"|bc`
+
+# Stats - size
+total_size=`stat -c %s expdp.dump`
+
+# Log finish time
+echo -en "Finish\t" >> $f_log
+echo -n `date +"%F %T"` >> $f_log
+echo -e "\t$time_diff\t$total_size" >> $f_log
+
+# Unlock
+rm $f_lock
+
+# madneon 2021-07-04

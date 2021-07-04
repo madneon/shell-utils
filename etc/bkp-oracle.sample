@@ -1,0 +1,14 @@
+exec:. /opt/oracle/.env
+exec:. /opt/oracle/.env-admin
+
+exec:/opt/bin/bkp-oracle
+files:expdp*
+oracle-dump		/opt/var/dump/oracle
+
+files:*.ora*
+oracle-ora		/opt/oracle/product/18c/dbhomeXE/network/admin
+
+files:.env
+oracle-env		/opt/oracle
+
+files:*
