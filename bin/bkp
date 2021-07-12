@@ -25,12 +25,18 @@ d_log="$d_root/var/log" 	# log directory
 f_log="$d_log/bkp.log"  	# log file
 d_out="$d_root/var/bkp" 	# output directory
 age_max=17              	# max file age, in days
-method="tar.gz"         	# compress method
 files="*"               	# files mask to backup
 files_addon=""          	#
 exclude_addon=""          	#
 d_lock="$d_root/var/run"	# lock dir
 f_lock="$d_lock/bkp.pid"	# lock file
+
+# Default compress method
+if [ `which pigz` ]; then
+	method="tar.pigz"
+else
+	method="tar.gz"
+fi
 
 # Check if locked
 if [ -e $f_lock ]; then
@@ -162,10 +168,18 @@ function f() {
 		# get datetime
 		dt=`date +"%F_%T"`
 		# archive file name
-		fn="$n"_"$dt"."$method"
+		if [ "$method" == "tar.pigz" ]; then
+			fn="$n"_"$dt"."tar.gz"
+		else
+			fn="$n"_"$dt"."$method"
+		fi
 
 		# compress
 		case "$method" in
+			"tar.pigz")
+				nproc=$((`nproc` / 5 + 1))
+				tar -I "pigz -p $nproc" -Pcf "./.$fn.bkpnew"$exclude_addon "$p/"$files_addon &>> $f_log
+				;;
 			"tar.bz2")
 				tar -Pcjf "./.$fn.bkpnew"$exclude_addon "$p/"$files_addon &>> $f_log
 				;;
@@ -221,4 +235,4 @@ echo -e "\t$time_diff\t$total_size" >> $f_log
 # Unlock
 rm $f_lock
 
-# madneon 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03, 2016-11-16, 2018-01-14, 2019-03-01, 2019-03-18, 2020-02-21, 2021-03-01
+# madneon 2010-06-26, 2010-10-27, 2011-05-14, 2012-08-03, 2014-09-13, 2014-12-14, 2016-09-03, 2016-11-16, 2018-01-14, 2019-03-01, 2019-03-18, 2020-02-21, 2021-03-01, 2021-07-12

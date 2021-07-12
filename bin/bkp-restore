@@ -221,7 +221,13 @@ function p() {
 				tar -Pxf "$u" "$p/"$files_addon >> $f_log
 				;;
 			*)
-				tar -Pxzf "$u" -C / &>> $f_log
+				if [ `which pigz` ]; then
+					nproc=$((`nproc` / 5 + 1))
+					echo $nproc
+					tar -I "pigz -p $nproc" -Pxf "$u" -C / &>> $f_log
+				else
+					tar -Pxzf "$u" -C / &>> $f_log
+				fi
 				;;
 		esac
 
@@ -292,4 +298,4 @@ echo -e "\t$time_diff\t$total_size" >> $f_log
 # Unlock
 rm $f_lock
 
-# madneon 2021-03-01
+# madneon 2021-03-01, 2021-07-12
