@@ -132,6 +132,12 @@ function f() {
 			continue
 		fi
 
+		# command "age_max"
+		if [ "$a"X == "age_max"X ]; then
+			age_max="$s"
+			continue
+		fi
+
 		# create output directory
 		if [ ! -d "$d_out" ]; then
 			mkdir -p $d_out
